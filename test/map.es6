@@ -76,6 +76,27 @@ describe('source maps', () => {
         });
     });
 
+    it('supports providing from and to as file: urls', () => {
+        let css       = 'a {\n  color: black;\n  }';
+        let processor = postcss( (root) => {
+            root.walkRules( (rule) => {
+                rule.selector = 'strong';
+            });
+            root.walkDecls( (decl) => {
+                decl.parent.prepend( decl.clone({ prop: 'background' }) );
+            });
+        });
+
+        let result = processor.process(css, {
+            from: 'file:///foo/bar/quux.css',
+            to:   'file:///foo/baz/blah.css',
+            map:  true
+        });
+        let map = read(result);
+        expect(map.sources).to.eql([ '/foo/baz/blah.css' ]);
+        expect(map.file).to.eql('/foo/baz/blah.css');
+    });
+
     it('changes previous source map', () => {
         let css = 'a { color: black }';
 

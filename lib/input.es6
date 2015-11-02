@@ -14,7 +14,17 @@ export default class Input {
             this.css = this.css.slice(1);
         }
 
-        if ( opts.from ) this.file = path.resolve(opts.from);
+        if ( opts.from ) {
+            let matchUrl = opts.from.match( /^([a-z0-9+]+):\/\/(\S*)$/ );
+            if (matchUrl) {
+                let schema = matchUrl[1];
+                if (schema === 'file') {
+                    this.file = path.resolve( matchUrl[2].split('/').map(decodeURIComponent).join('/') );
+                }
+            } else {
+                this.file = path.resolve( opts.from );
+            }
+        }
 
         let map = new PreviousMap(this.css, opts);
         if ( map.text ) {
