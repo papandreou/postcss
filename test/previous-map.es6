@@ -111,10 +111,37 @@ describe('PreviousMap', () => {
             .to.throw('Unsupported previous source map format: 1');
     });
 
-    it('reads map from annotation', () => {
+    it('reads map from annotation, relative', () => {
         let file = path.join(dir, 'a.map');
         fs.outputFileSync(file, map);
         let root = parse('a{}\n/*# sourceMappingURL=a.map */', { from: file });
+
+        expect(root.source.input.map.text).to.eql(map);
+        expect(root.source.input.map.root).to.eql(dir);
+    });
+
+    it('reads map from annotation, root-relative', () => {
+        let file = path.join(dir, 'a.map');
+        fs.outputFileSync(file, map);
+        let root = parse('a{}\n/*# sourceMappingURL=' + dir + '/a.map */', { from: file });
+
+        expect(root.source.input.map.text).to.eql(map);
+        expect(root.source.input.map.root).to.eql(dir);
+    });
+
+    it('reads map from annotation, file: url', () => {
+        let file = path.join(dir, 'a.map');
+        fs.outputFileSync(file, map);
+        let root = parse('a{}\n/*# sourceMappingURL=file://' + dir + '/a.map */', { from: file });
+
+        expect(root.source.input.map.text).to.eql(map);
+        expect(root.source.input.map.root).to.eql(dir);
+    });
+
+    it('reads map from annotation, file: url with non-ascii characters and space', () => {
+        let file = path.join(dir, '☺ æøå.map');
+        fs.outputFileSync(file, map);
+        let root = parse('a{}\n/*# sourceMappingURL=file://' + dir.split('/').map(encodeURIComponent).join('/') + '/%E2%98%BA%20%C3%A6%C3%B8%C3%A5.map */', { from: file });
 
         expect(root.source.input.map.text).to.eql(map);
         expect(root.source.input.map.root).to.eql(dir);
@@ -135,5 +162,4 @@ describe('PreviousMap', () => {
         expect(file1).to.match(/^<input css \d+>$/);
         expect(file1).to.not.eql(file2);
     });
-
 });

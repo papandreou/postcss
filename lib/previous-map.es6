@@ -79,7 +79,19 @@ export default class PreviousMap {
 
         } else if ( this.annotation ) {
             let map = this.annotation;
-            if ( file ) map = path.join(path.dirname(file), map);
+            let matchUrl = map.match( /^([a-z0-9+]+):\/\/(\S*)$/ );
+            if (matchUrl) {
+                let schema = matchUrl[1];
+                if (schema === 'file') {
+                    map = matchUrl[2].split('/').map(decodeURIComponent).join('/');
+                } else {
+                    // Don't attempt to load source maps from http:// urls for now
+                    return false;
+                }
+            }
+            if ( file && map.indexOf('/') !== 0 ) {
+                map = path.join(path.dirname(file), map);
+            }
 
             this.root = path.dirname(map);
             if ( fs.existsSync && fs.existsSync(map) ) {
