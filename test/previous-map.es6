@@ -1,4 +1,5 @@
 import parse from '../lib/parse';
+import PreviousMap from '../lib/previous-map';
 
 import   mozilla  from 'source-map';
 import   mozilla2 from 'isparta/node_modules/source-map';
@@ -136,4 +137,51 @@ describe('PreviousMap', () => {
         expect(file1).to.not.eql(file2);
     });
 
+
+    it('should allow specifying the previous source map', function () {
+        var css = parse('body{color:#555}', {
+            from: 'from.blah',
+            source: 'to.blah',
+            map: {
+                prev: {
+                    version: 3,
+                    sources: [ 'foo.less' ],
+                    names: [],
+                    mappings: 'AAEA;EACI,cAAA',
+                    file: 'foo.css'
+                }
+            }
+        });
+        expect(css.toResult({ map: { inline: false, annotation: false  } }).map.toJSON().sources).to.eql([ 'foo.less' ]);
+    });
+
+    it('should allow replacing the previous source map after the fact', function () {
+        var css = parse('body{color:#555}', {
+            from: 'from.blah',
+            source: 'to.blah',
+            map: {
+                prev: {
+                    version: 3,
+                    sources: [],
+                    names: [],
+                    mappings: true
+                }
+            }
+        });
+
+        css.source.input.map = Object.create(PreviousMap.prototype, {
+            text: {
+                value: {
+                    version: 3,
+                    sources: [ 'foo.less' ],
+                    names: [],
+                    mappings: 'AAEA;EACI,cAAA',
+                    file: 'foo.css'
+                }
+            },
+            file: { value: 'wat' }
+        });
+
+        expect(css.toResult({ map: { inline: false, annotation: false  } }).map.toJSON().sources).to.eql([ 'foo.less' ]);
+    });
 });
