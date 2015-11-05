@@ -156,31 +156,21 @@ describe('PreviousMap', () => {
     });
 
     it('should allow replacing the previous source map after the fact', function () {
-        var css = parse('body{color:#555}', {
-            from: 'from.blah',
-            source: 'to.blah',
+        var css = parse('body{color:#555}');
+
+        var inputWithSourceMap = parse('', {
             map: {
                 prev: {
-                    version: 3,
-                    sources: [],
-                    names: [],
-                    mappings: true
-                }
-            }
-        });
-
-        css.source.input.map = Object.create(PreviousMap.prototype, {
-            text: {
-                value: {
                     version: 3,
                     sources: [ 'foo.less' ],
                     names: [],
                     mappings: 'AAEA;EACI,cAAA',
                     file: 'foo.css'
                 }
-            },
-            file: { value: 'wat' }
-        });
+            }
+        }).source.input;
+        css.source.input.map = inputWithSourceMap.map;
+        css.source.input.file = inputWithSourceMap.file;
 
         expect(css.toResult({ map: { inline: false, annotation: false  } }).map.toJSON().sources).to.eql([ 'foo.less' ]);
     });
